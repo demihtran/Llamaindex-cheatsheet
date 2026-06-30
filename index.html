@@ -1222,6 +1222,31 @@ events = debug.get_event_pairs()</code></pre>
           </div>
         </div>
         <div class="body">
+          <pre class="language-python"><code class="language-python">from llama_index.core import Settings, VectorStoreIndex, StorageContext
+from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.ingestion import IngestionPipeline
+from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.llms.openai import OpenAI
+
+Settings.llm = OpenAI(model="gpt-4.1", temperature=0)
+Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-large")
+Settings.text_splitter = SentenceSplitter(
+    chunk_size=512,
+    chunk_overlap=80,
+)
+
+pipeline = IngestionPipeline(
+    transformations=[
+        Settings.text_splitter,
+        Settings.embed_model,
+    ],
+)
+
+nodes = pipeline.run(documents=documents)
+index = VectorStoreIndex(
+    nodes,
+    storage_context=StorageContext.from_defaults(vector_store=vector_store),
+)</code></pre>
           <ul class="mono-list">
             <li><code>Settings</code><br>Global defaults for <code>llm</code>, <code>embed_model</code>, <code>text_splitter</code>, <code>chunk_size</code>, <code>callback_manager</code>.</li>
             <li><code>Document</code><br>Raw data plus metadata; use stable ids, source, page, tenant, permissions, and updated_at.</li>
@@ -1297,6 +1322,31 @@ response = await agent.run(
           </div>
         </div>
         <div class="body">
+          <pre class="language-python"><code class="language-python">from llama_index.core.postprocessor import SimilarityPostprocessor
+
+retriever = index.as_retriever(
+    similarity_top_k=12,
+    filters=tenant_and_acl_filters,
+)
+
+query_engine = index.as_query_engine(
+    similarity_top_k=12,
+    node_postprocessors=[
+        SimilarityPostprocessor(similarity_cutoff=0.72),
+        recency_postprocessor,
+        reranker,
+    ],
+    response_mode="compact",
+)
+
+response = query_engine.query("What changed in the refund policy?")
+
+for source in response.source_nodes:
+    print(
+        source.node.node_id,
+        source.score,
+        source.node.metadata.get("source"),
+    )</code></pre>
           <ul class="mono-list">
             <li><code>similarity_top_k</code><br>Start small, evaluate recall, then increase only when evidence is missing.</li>
             <li><code>Node postprocessors</code><br>Similarity cutoff, metadata filters, recency filters, rerankers, context trimming.</li>
@@ -1352,6 +1402,36 @@ prompt_version = "qa_citation_v5"</code></pre>
           </div>
         </div>
         <div class="body">
+          <pre class="language-python"><code class="language-python">from hashlib import sha256
+from llama_index.core import Document
+
+def stable_doc_id(source: str, version: str, text: str) -> str:
+    digest = sha256(text.encode("utf-8")).hexdigest()[:12]
+    return f"{source}:{version}:{digest}"
+
+documents = []
+for record in changed_records:
+    doc = Document(
+        text=record.text,
+        id_=stable_doc_id(record.source, record.version, record.text),
+        metadata={
+            "source": record.source,
+            "section": record.section,
+            "tenant_id": record.tenant_id,
+            "acl": record.allowed_groups,
+            "updated_at": record.updated_at,
+            "data_version": record.version,
+        },
+    )
+    documents.append(doc)
+
+# Re-run ingestion only for changed docs, then upsert nodes
+nodes = pipeline.run(documents=documents)
+vector_store.add(nodes)
+
+# For deleted source documents, delete by stored doc/node ids
+for node_id in deleted_node_ids:
+    vector_store.delete(node_id)</code></pre>
           <ul class="mono-list">
             <li><code>Stable IDs</code><br>Derive document and node ids from source path/url, section, version, and content hash.</li>
             <li><code>Incremental updates</code><br>Upsert changed documents, delete removed documents, and tombstone stale nodes.</li>
@@ -1372,6 +1452,36 @@ prompt_version = "qa_citation_v5"</code></pre>
           </div>
         </div>
         <div class="body">
+          <pre class="language-python"><code class="language-python">from llama_index.core.evaluation import (
+    FaithfulnessEvaluator,
+    RelevancyEvaluator,
+)
+
+faithfulness = FaithfulnessEvaluator(llm=Settings.llm)
+relevancy = RelevancyEvaluator(llm=Settings.llm)
+
+eval_cases = [
+    {
+        "query": "What is the refund SLA?",
+        "expected_source": "policy/refunds.md",
+    }
+]
+
+for case in eval_cases:
+    response = query_engine.query(case["query"])
+    source_ids = [n.node.metadata.get("source") for n in response.source_nodes]
+
+    results = {
+        "faithfulness": faithfulness.evaluate_response(response=response),
+        "relevancy": relevancy.evaluate_response(
+            query=case["query"],
+            response=response,
+        ),
+        "source_hit": case["expected_source"] in source_ids,
+        "source_ids": source_ids,
+        "model": Settings.llm.metadata.model_name,
+        "index_version": "docs_2026_06_30",
+    }</code></pre>
           <ul class="mono-list">
             <li><code>Retrieval eval</code><br>Measure whether expected nodes appear in top-k, before asking if the final answer is good.</li>
             <li><code>Faithfulness</code><br>Check whether claims are supported by retrieved source nodes.</li>
