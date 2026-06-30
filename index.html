@@ -192,24 +192,24 @@
 
     pre[class*="language-"],
     code[class*="language-"] {
-      background: #f3f8ff;
+      background: #fffaff;
       color: #172033;
       text-shadow: none;
       font-size: 11px;
     }
     pre[class*="language-"] {
-      border-left-color: #326aab;
-      box-shadow: inset 0 0 0 1px rgba(50, 106, 171, .16);
+      border-left-color: #7c3aed;
+      box-shadow: inset 0 0 0 1px rgba(124, 58, 237, .18), 0 8px 18px rgba(36, 88, 154, .08);
     }
-    .token.comment, .token.prolog, .token.doctype, .token.cdata { color: #71839a; font-style: italic; }
-    .token.keyword { color: #1d4f8f; font-weight: 800; }
-    .token.string, .token.char { color: #0d6a63; }
-    .token.function { color: #24589a; }
-    .token.class-name, .token.constant { color: #9a5b13; font-weight: 750; }
-    .token.number, .token.boolean { color: #be365d; }
-    .token.operator, .token.punctuation { color: #4b5d73; }
-    .token.builtin, .token.decorator { color: #7a4aa0; }
-    .token.attr-name, .token.property { color: #b35c2e; }
+    .token.comment, .token.prolog, .token.doctype, .token.cdata { color: #69758a; font-style: italic; }
+    .token.keyword { color: #7c3aed; font-weight: 900; }
+    .token.string, .token.char { color: #047857; font-weight: 650; }
+    .token.function { color: #0369a1; font-weight: 800; }
+    .token.class-name, .token.constant { color: #b45309; font-weight: 850; }
+    .token.number, .token.boolean { color: #dc2626; font-weight: 800; }
+    .token.operator, .token.punctuation { color: #334155; }
+    .token.builtin, .token.decorator { color: #be185d; font-weight: 800; }
+    .token.attr-name, .token.property { color: #c2410c; font-weight: 750; }
 
     .note {
       display: grid;
@@ -1304,6 +1304,81 @@ response = await agent.run(
             <li><code>RouterQueryEngine</code><br>Route between vector search, summary index, SQL, graph, or external tools.</li>
             <li><code>PropertyGraphIndex</code><br>Use when entity relationships are the real retrieval target.</li>
             <li><code>Eval loop</code><br>Track retrieved nodes, response text, source accuracy, cost, latency, and version ids.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article id="real-life-llamaindex" class="card span-3">
+        <div class="card-head">
+          <div class="icon blue">PRO</div>
+          <div>
+            <h2>Real-Life LlamaIndex Architecture</h2>
+            <div class="caption">Production RAG is a data lifecycle, not only a query engine</div>
+          </div>
+        </div>
+        <div class="body">
+          <pre class="language-python"><code class="language-python"># Production RAG lifecycle
+source_systems
+  -> loader / reader
+  -> document normalization
+  -> node parser + metadata extraction
+  -> embeddings + vector store write
+  -> retriever + postprocessors + synthesizer
+  -> answer with source nodes
+  -> eval + trace + feedback
+
+# Version all of these:
+data_version = "docs_2026_06_30"
+pipeline_version = "splitter_512_overlap_80_v3"
+embedding_version = "text-embedding-3-large"
+prompt_version = "qa_citation_v5"</code></pre>
+          <ul class="mono-list">
+            <li><code>Separate ingestion</code><br>Do not parse, chunk, embed, and query inside one user request path.</li>
+            <li><code>Stable metadata</code><br>Every node needs source, page/section, tenant, permission, timestamp, and document version.</li>
+            <li><code>Persist everything</code><br>Use persistent vector store, docstore/index store when needed, and backup storage.</li>
+            <li><code>Inspect source_nodes</code><br>When answers fail, inspect retrieved nodes before changing prompts or models.</li>
+            <li><code>Postprocess</code><br>Use similarity cutoff, reranking, metadata filters, recency filters, and context trimming.</li>
+            <li><code>Measure versions</code><br>Compare retrieval quality whenever chunking, embedding, top_k, or response mode changes.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article id="index-maintenance" class="card span-2">
+        <div class="card-head">
+          <div class="icon gold">IDX</div>
+          <div>
+            <h2>Index Maintenance Best Practices</h2>
+            <div class="caption">Keep the knowledge base fresh, correct, and debuggable</div>
+          </div>
+        </div>
+        <div class="body">
+          <ul class="mono-list">
+            <li><code>Stable IDs</code><br>Derive document and node ids from source path/url, section, version, and content hash.</li>
+            <li><code>Incremental updates</code><br>Upsert changed documents, delete removed documents, and tombstone stale nodes.</li>
+            <li><code>Embedding migration</code><br>Changing embedding model means building a new index; do not mix vector spaces.</li>
+            <li><code>Access control</code><br>Filter by tenant/user permissions before synthesis, not after the final answer.</li>
+            <li><code>Quality dashboards</code><br>Track empty retrieval, low-score retrieval, no-source answers, stale source usage, and cost.</li>
+            <li><code>Rollback</code><br>Keep previous index versions so bad ingestion jobs can be rolled back quickly.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article id="rag-eval-observability" class="card">
+        <div class="card-head">
+          <div class="icon red">OBS</div>
+          <div>
+            <h2>Eval &amp; Observability</h2>
+            <div class="caption">Separate retrieval failures from synthesis failures</div>
+          </div>
+        </div>
+        <div class="body">
+          <ul class="mono-list">
+            <li><code>Retrieval eval</code><br>Measure whether expected nodes appear in top-k, before asking if the final answer is good.</li>
+            <li><code>Faithfulness</code><br>Check whether claims are supported by retrieved source nodes.</li>
+            <li><code>Relevancy</code><br>Check whether the answer addresses the query without drifting.</li>
+            <li><code>Source accuracy</code><br>Citations must support the exact claim, not merely come from a related document.</li>
+            <li><code>Trace fields</code><br>Log query, retrieved node ids, scores, postprocessor decisions, response mode, model, latency, tokens.</li>
+            <li><code>Feedback loop</code><br>Convert bad user sessions into labelled eval cases before changing prompts blindly.</li>
           </ul>
         </div>
       </article>
