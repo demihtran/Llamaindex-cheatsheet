@@ -1,9 +1,10 @@
 <!doctype html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LlamaIndex Cheatsheet</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
   <style>
     :root {
       --bg: #f6f8fb;
@@ -188,6 +189,28 @@
       line-height: 1.55;
       white-space: pre;
     }
+
+    pre[class*="language-"],
+    code[class*="language-"] {
+      background: #0f172a;
+      color: #dbeafe;
+      text-shadow: none;
+      font-size: 11px;
+    }
+    pre[class*="language-"] {
+      border-left-color: #38bdf8;
+      box-shadow: inset 0 0 0 1px rgba(148, 163, 184, .18);
+    }
+    .token.comment, .token.prolog, .token.doctype, .token.cdata { color: #94a3b8; }
+    .token.keyword { color: #f472b6; }
+    .token.string, .token.char { color: #86efac; }
+    .token.function { color: #93c5fd; }
+    .token.class-name, .token.constant { color: #fde68a; }
+    .token.number, .token.boolean { color: #fbbf24; }
+    .token.operator, .token.punctuation { color: #cbd5e1; }
+    .token.builtin, .token.decorator { color: #67e8f9; }
+    .token.attr-name, .token.property { color: #fca5a5; }
+
     .note {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -294,12 +317,12 @@
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> LlamaIndex kết nối private data với LLM qua loading, indexing, retrieval, querying.</div>
-            <div class="fact"><b>Khi dùng</b> RAG, chat over docs, structured extraction, agents dùng query engines/tools.</div>
-            <div class="fact"><b>Install</b> <code>pip install -U llama-index</code> hoặc package tách nhỏ.</div>
+            <div class="fact"><b>Concept</b> LlamaIndex connects private data to LLMs through loading, indexing, retrieval, and querying.</div>
+            <div class="fact"><b>Use when</b> RAG, chat over docs, structured extraction, agents use query engines/tools.</div>
+            <div class="fact"><b>Install</b> <code>pip install -U llama-index</code> or split provider packages.</div>
             <div class="fact"><b>Core Flow</b> Load -> parse -> index -> retrieve -> synthesize -> evaluate.</div>
           </div>
-          <pre><code>pip install -U llama-index
+          <pre class="language-python"><code class="language-python">pip install -U llama-index
 pip install -U llama-index-llms-openai
 pip install -U llama-index-embeddings-openai
 
@@ -314,8 +337,8 @@ index = VectorStoreIndex.from_documents(documents)
 query_engine = index.as_query_engine()
 response = query_engine.query("Summarize the docs")</code></pre>
           <div class="note">
-            <p><b>Best:</b> bắt đầu bằng pipeline RAG đơn giản, sau đó tối ưu từng lớp retrieval/synthesis.</p>
-            <p class="bad"><b>Mistake:</b> coi LlamaIndex chỉ là vector DB wrapper; phần query engine/synthesis cũng rất quan trọng.</p>
+            <p><b>Best:</b> Start with a simple RAG pipeline, then optimize retrieval and synthesis layers separately.</p>
+            <p class="bad"><b>Mistake:</b> Treat LlamaIndex as only a vector DB wrapper; query engines and synthesis are also central.</p>
           </div>
         </div>
       </article>
@@ -330,12 +353,12 @@ response = query_engine.query("Summarize the docs")</code></pre>
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Global settings thay thế ServiceContext cũ cho LLM, embedding, splitter, callbacks.</div>
-            <div class="fact"><b>Khi dùng</b> Đặt default model/embedding/chunking cho toàn app.</div>
+            <div class="fact"><b>Concept</b> Global settings replace old ServiceContext patterns for LLMs, embeddings, splitters, and callbacks.</div>
+            <div class="fact"><b>Use when</b> Set default model, embedding, and chunking configuration for the whole app.</div>
             <div class="fact"><b>Import</b> <code>from llama_index.core import Settings</code></div>
             <div class="fact"><b>Fields</b> <code>llm</code>, <code>embed_model</code>, <code>text_splitter</code>, <code>chunk_size</code>.</div>
           </div>
-          <pre><code>from llama_index.core import Settings
+          <pre class="language-python"><code class="language-python">from llama_index.core import Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.core.node_parser import SentenceSplitter
@@ -349,8 +372,8 @@ Settings.text_splitter = SentenceSplitter(
     chunk_overlap=120,
 )</code></pre>
           <div class="note">
-            <p><b>Best:</b> cấu hình model/embedding một chỗ, pin versions, dùng env vars cho keys.</p>
-            <p class="bad"><b>Mistake:</b> trộn nhiều embedding models trong cùng index hoặc dùng ServiceContext cũ cho code mới.</p>
+            <p><b>Best:</b> Configure model/embedding in one place, pin versions, and use env vars for keys.</p>
+            <p class="bad"><b>Mistake:</b> Mix embedding models in one index or use old ServiceContext patterns in new code.</p>
           </div>
         </div>
       </article>
@@ -365,12 +388,12 @@ Settings.text_splitter = SentenceSplitter(
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> LLM generate/synthesize; embedding model biến text thành vectors.</div>
-            <div class="fact"><b>Khi dùng</b> Query engine, response synthesis, agents, semantic retrieval.</div>
+            <div class="fact"><b>Concept</b> LLMs generate/synthesize; embedding models convert text into vectors.</div>
+            <div class="fact"><b>Use when</b> Query engine, response synthesis, agents, semantic retrieval.</div>
             <div class="fact"><b>Constructors</b> <code>OpenAI(model=...)</code>, <code>OpenAIEmbedding(model=...)</code></div>
             <div class="fact"><b>Methods</b> <code>complete</code>, <code>chat</code>, <code>stream_complete</code>, embedding qua index.</div>
           </div>
-          <pre><code>from llama_index.llms.openai import OpenAI
+          <pre class="language-python"><code class="language-python">from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
 
 llm = OpenAI(model="gpt-4o-mini", temperature=0.1)
@@ -385,8 +408,8 @@ chat = llm.chat([
 Settings.llm = llm
 Settings.embed_model = embed_model</code></pre>
           <div class="note">
-            <p><b>Best:</b> chọn embedding model trước khi build index và giữ nguyên khi query.</p>
-            <p class="bad"><b>Mistake:</b> đổi embedding model sau khi index đã build mà không re-index.</p>
+            <p><b>Best:</b> Choose the embedding model before building the index and keep it fixed for querying.</p>
+            <p class="bad"><b>Mistake:</b> Change the embedding model after building an index without re-indexing.</p>
           </div>
         </div>
       </article>
@@ -401,12 +424,12 @@ Settings.embed_model = embed_model</code></pre>
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Readers/loaders chuyển file, web, DB, APIs thành <code>Document</code>.</div>
-            <div class="fact"><b>Khi dùng</b> Ingest dữ liệu trước khi parse/chunk/index.</div>
-            <div class="fact"><b>Import</b> <code>SimpleDirectoryReader</code>, connector packages từ LlamaHub.</div>
+            <div class="fact"><b>Concept</b> Readers/loaders convert files, web pages, databases, and APIs into <code>Document</code> objects.</div>
+            <div class="fact"><b>Use when</b> Ingest data before when parse/chunk/index.</div>
+            <div class="fact"><b>Import</b> <code>SimpleDirectoryReader</code> and connector packages from LlamaHub.</div>
             <div class="fact"><b>Methods</b> <code>load_data()</code>, connector-specific options.</div>
           </div>
-          <pre><code>from llama_index.core import SimpleDirectoryReader
+          <pre class="language-python"><code class="language-python">from llama_index.core import SimpleDirectoryReader
 
 documents = SimpleDirectoryReader(
     input_dir="data",
@@ -421,8 +444,8 @@ for doc in documents:
 # pip install llama-parse
 # from llama_parse import LlamaParse</code></pre>
           <div class="note">
-            <p><b>Best:</b> giữ metadata như source, page, tenant_id để filter/cite/debug.</p>
-            <p class="bad"><b>Mistake:</b> ingest dữ liệu thô nhiều noise hoặc bỏ metadata nguồn.</p>
+            <p><b>Best:</b> Keep metadata such as source, page, and tenant_id for filtering, citation, and debugging.</p>
+            <p class="bad"><b>Mistake:</b> Ingest noisy raw data or omit source metadata.</p>
           </div>
         </div>
       </article>
@@ -437,12 +460,12 @@ for doc in documents:
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Document</b> Raw/semi-raw text + metadata từ loader.</div>
-            <div class="fact"><b>Node</b> Chunk có ID, text, metadata, relationships, embedding.</div>
+            <div class="fact"><b>Document</b> Raw/semi-raw text + metadata from loaders.</div>
+            <div class="fact"><b>Node</b> Chunk with ID, text, metadata, relationships, and optional embedding.</div>
             <div class="fact"><b>Import</b> <code>Document</code>, <code>TextNode</code></div>
             <div class="fact"><b>Methods</b> <code>get_content()</code>, <code>set_content()</code>, metadata fields.</div>
           </div>
-          <pre><code>from llama_index.core import Document
+          <pre class="language-python"><code class="language-python">from llama_index.core import Document
 from llama_index.core.schema import TextNode
 
 doc = Document(
@@ -458,8 +481,8 @@ node = TextNode(
 print(doc.text)
 print(node.get_content())</code></pre>
           <div class="note">
-            <p><b>Best:</b> Document cho ingestion, Node cho indexing/retrieval; metadata nên nhất quán.</p>
-            <p class="bad"><b>Mistake:</b> chunk mất source/page khiến response không cite được.</p>
+            <p><b>Best:</b> Use Document for ingestion and Node for indexing/retrieval; keep metadata consistent.</p>
+            <p class="bad"><b>Mistake:</b> Create chunks without source/page metadata so responses cannot cite evidence.</p>
           </div>
         </div>
       </article>
@@ -474,12 +497,12 @@ print(node.get_content())</code></pre>
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Node parser/chunker tạo nodes từ documents.</div>
-            <div class="fact"><b>Khi dùng</b> PDF/docs dài, code, markdown, corpus cần retrieval.</div>
+            <div class="fact"><b>Concept</b> Node parser/chunker create nodes from documents.</div>
+            <div class="fact"><b>Use when</b> Long PDFs/docs, code, Markdown, and corpora that need retrieval.</div>
             <div class="fact"><b>Constructor</b> <code>SentenceSplitter(chunk_size, chunk_overlap)</code></div>
-            <div class="fact"><b>Methods</b> <code>get_nodes_from_documents()</code>, transformations trong ingestion.</div>
+            <div class="fact"><b>Methods</b> <code>get_nodes_from_documents()</code>, transformations in ingestion.</div>
           </div>
-          <pre><code>from llama_index.core.node_parser import SentenceSplitter
+          <pre class="language-python"><code class="language-python">from llama_index.core.node_parser import SentenceSplitter
 
 splitter = SentenceSplitter(
     chunk_size=800,
@@ -490,8 +513,8 @@ nodes = splitter.get_nodes_from_documents(documents)
 
 index = VectorStoreIndex(nodes)</code></pre>
           <div class="note">
-            <p><b>Best:</b> tune chunking bằng câu hỏi thật và đánh giá retrieval recall.</p>
-            <p class="bad"><b>Mistake:</b> chunk quá nhỏ mất context, quá lớn làm embedding/retrieval kém.</p>
+            <p><b>Best:</b> Tune chunking with real queries and evaluate retrieval recall.</p>
+            <p class="bad"><b>Mistake:</b> Chunks that are too small lose context; chunks that are too large reduce recall.</p>
           </div>
         </div>
       </article>
@@ -506,12 +529,12 @@ index = VectorStoreIndex(nodes)</code></pre>
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Pipeline chạy chuỗi transformations từ documents sang nodes đã sẵn sàng index.</div>
-            <div class="fact"><b>Khi dùng</b> Production ingestion, caching, metadata extraction, batch processing.</div>
+            <div class="fact"><b>Concept</b> Pipeline runs transformations from documents into index-ready nodes.</div>
+            <div class="fact"><b>Use when</b> Production ingestion, caching, metadata extraction, batch processing.</div>
             <div class="fact"><b>Import</b> <code>IngestionPipeline</code>, <code>SentenceSplitter</code>, embedding transforms.</div>
             <div class="fact"><b>Methods</b> <code>run()</code>, <code>arun()</code>, optional cache/vector_store.</div>
           </div>
-          <pre><code>from llama_index.core.ingestion import IngestionPipeline
+          <pre class="language-python"><code class="language-python">from llama_index.core.ingestion import IngestionPipeline
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.openai import OpenAIEmbedding
 
@@ -527,8 +550,8 @@ nodes = pipeline.run(documents=documents)
 # You can add metadata extractors, custom transforms,
 # cache, or a vector_store for production ingestion.</code></pre>
           <div class="note">
-            <p><b>Best:</b> build ingestion riêng query path; cache transformations đắt tiền.</p>
-            <p class="bad"><b>Mistake:</b> embed lại toàn bộ corpus mỗi lần app start hoặc không version pipeline.</p>
+            <p><b>Best:</b> Build ingestion outside the query path and cache expensive transformations.</p>
+            <p class="bad"><b>Mistake:</b> Re-embed the whole corpus on every app start or skip pipeline versioning.</p>
           </div>
         </div>
       </article>
@@ -543,12 +566,12 @@ nodes = pipeline.run(documents=documents)
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Index embeds nodes/documents và lưu vào vector store.</div>
-            <div class="fact"><b>Khi dùng</b> RAG trên docs, semantic search, chat over private data.</div>
+            <div class="fact"><b>Concept</b> Index embeds nodes/documents and store into vector store.</div>
+            <div class="fact"><b>Use when</b> RAG over documents, semantic search, and chat over private data.</div>
             <div class="fact"><b>Constructors</b> <code>from_documents()</code>, <code>VectorStoreIndex(nodes)</code></div>
             <div class="fact"><b>Methods</b> <code>as_query_engine</code>, <code>as_retriever</code>, <code>as_chat_engine</code>, <code>insert</code>.</div>
           </div>
-          <pre><code>from llama_index.core import VectorStoreIndex
+          <pre class="language-python"><code class="language-python">from llama_index.core import VectorStoreIndex
 
 index = VectorStoreIndex.from_documents(
     documents,
@@ -563,8 +586,8 @@ response = query_engine.query("What are the main findings?")
 retriever = index.as_retriever(similarity_top_k=5)
 nodes = retriever.retrieve("main findings")</code></pre>
           <div class="note">
-            <p><b>Best:</b> set <code>similarity_top_k</code> theo eval, không chỉ theo cảm giác.</p>
-            <p class="bad"><b>Mistake:</b> rebuild index trong request path hoặc không persist index/vector store.</p>
+            <p><b>Best:</b> Set <code>similarity_top_k</code> by evaluation, not by intuition alone.</p>
+            <p class="bad"><b>Mistake:</b> Rebuild indexes in the request path or fail to persist the index/vector store.</p>
           </div>
         </div>
       </article>
@@ -579,12 +602,12 @@ nodes = retriever.retrieve("main findings")</code></pre>
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> StorageContext quản lý nơi lưu nodes, index metadata, vector data.</div>
-            <div class="fact"><b>Khi dùng</b> Persist/load index, custom vector DB, production RAG.</div>
+            <div class="fact"><b>Concept</b> StorageContext manages where nodes, index metadata, and vector data are stored.</div>
+            <div class="fact"><b>Use when</b> Persist/load index, custom vector DB, production RAG.</div>
             <div class="fact"><b>Import</b> <code>StorageContext</code>, <code>load_index_from_storage</code></div>
             <div class="fact"><b>Methods</b> <code>persist()</code>, <code>from_defaults()</code>.</div>
           </div>
-          <pre><code>from llama_index.core import (
+          <pre class="language-python"><code class="language-python">from llama_index.core import (
     StorageContext,
     load_index_from_storage,
 )
@@ -598,8 +621,8 @@ storage_context = StorageContext.from_defaults(
 )
 index = load_index_from_storage(storage_context)</code></pre>
           <div class="note">
-            <p><b>Best:</b> production dùng vector store bền vững và backup storage.</p>
-            <p class="bad"><b>Mistake:</b> chỉ lưu local storage tạm hoặc mismatch embedding model khi load lại.</p>
+            <p><b>Best:</b> Use a durable vector store and backed-up storage in production.</p>
+            <p class="bad"><b>Mistake:</b> Only use temporary local storage or load an index with a mismatched embedding model.</p>
           </div>
         </div>
       </article>
@@ -614,12 +637,12 @@ index = load_index_from_storage(storage_context)</code></pre>
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Backend lưu vectors/metadata: Chroma, Qdrant, Pinecone, Weaviate, Postgres...</div>
-            <div class="fact"><b>Khi dùng</b> Corpus lớn, persistence, filtering, hybrid search, production scale.</div>
+            <div class="fact"><b>Concept</b> Backend store vectors/metadata: Chroma, Qdrant, Pinecone, Weaviate, Postgres...</div>
+            <div class="fact"><b>Use when</b> Large corpora, persistence, filtering, hybrid search, and production scale.</div>
             <div class="fact"><b>Import</b> Provider-specific vector store + <code>StorageContext</code>.</div>
-            <div class="fact"><b>Methods</b> Dùng qua <code>VectorStoreIndex.from_vector_store()</code> hoặc storage context.</div>
+            <div class="fact"><b>Methods</b> Use qua <code>VectorStoreIndex.from_vector_store()</code> or storage context.</div>
           </div>
-          <pre><code># Example shape; install provider package first.
+          <pre class="language-python"><code class="language-python"># Example shape; install provider package first.
 from llama_index.core import StorageContext, VectorStoreIndex
 from llama_index.vector_stores.chroma import ChromaVectorStore
 
@@ -633,8 +656,8 @@ index = VectorStoreIndex.from_documents(
     storage_context=storage_context,
 )</code></pre>
           <div class="note">
-            <p><b>Best:</b> chọn store có filter, update/delete, backup, tenancy phù hợp dữ liệu.</p>
-            <p class="bad"><b>Mistake:</b> quên metadata filters cho quyền truy cập hoặc multi-tenant data.</p>
+            <p><b>Best:</b> Choose stores with filtering, update/delete paths, backups, and tenancy support for your data.</p>
+            <p class="bad"><b>Mistake:</b> Forget metadata filters for access control or multi-tenant data.</p>
           </div>
         </div>
       </article>
@@ -649,12 +672,12 @@ index = VectorStoreIndex.from_documents(
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Query engine nhận query, retrieve nodes, synthesize response.</div>
-            <div class="fact"><b>Khi dùng</b> API hỏi đáp RAG đơn giản, Q&amp;A over docs, one-shot answers.</div>
+            <div class="fact"><b>Concept</b> Query engines accept queries, retrieve nodes, and synthesize responses.</div>
+            <div class="fact"><b>Use when</b> Simple RAG Q&A APIs, document Q&A, and one-shot answers.</div>
             <div class="fact"><b>Constructor</b> <code>index.as_query_engine(...)</code>, <code>RetrieverQueryEngine.from_args(...)</code></div>
-            <div class="fact"><b>Methods</b> <code>query()</code>, <code>aquery()</code>, source nodes trong response.</div>
+            <div class="fact"><b>Methods</b> <code>query()</code>, <code>aquery()</code>, source nodes in response.</div>
           </div>
-          <pre><code>query_engine = index.as_query_engine(
+          <pre class="language-python"><code class="language-python">query_engine = index.as_query_engine(
     similarity_top_k=4,
     response_mode="compact",
 )
@@ -672,7 +695,7 @@ for source in response.source_nodes:
 # response = await query_engine.aquery("...")</code></pre>
           <div class="note">
             <p><b>Best:</b> expose source nodes/citations; tune top_k + response_mode qua eval.</p>
-            <p class="bad"><b>Mistake:</b> chỉ đọc final answer, không inspect retrieved nodes khi sai.</p>
+            <p class="bad"><b>Mistake:</b> Only read the final answer instead of inspecting retrieved nodes when answers are wrong.</p>
           </div>
         </div>
       </article>
@@ -687,12 +710,12 @@ for source in response.source_nodes:
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Retriever chỉ trả nodes liên quan, không generate answer.</div>
-            <div class="fact"><b>Khi dùng</b> Custom RAG, rerank, inspect recall, compose query engines.</div>
+            <div class="fact"><b>Concept</b> Retrievers return relevant nodes but do not generate answers.</div>
+            <div class="fact"><b>Use when</b> Custom RAG, rerank, inspect recall, compose query engines.</div>
             <div class="fact"><b>Constructor</b> <code>index.as_retriever(similarity_top_k=...)</code></div>
             <div class="fact"><b>Methods</b> <code>retrieve()</code>, <code>aretrieve()</code>.</div>
           </div>
-          <pre><code>retriever = index.as_retriever(
+          <pre class="language-python"><code class="language-python">retriever = index.as_retriever(
     similarity_top_k=8,
 )
 
@@ -705,8 +728,8 @@ for n in nodes:
 # Combine with rerank/postprocessors
 # before response synthesis.</code></pre>
           <div class="note">
-            <p><b>Best:</b> test retriever riêng bằng labelled queries trước khi blame LLM.</p>
-            <p class="bad"><b>Mistake:</b> tăng top_k quá cao khiến synthesis bị loãng và tốn token.</p>
+            <p><b>Best:</b> test retriever separate with labelled queries before when blame LLM.</p>
+            <p class="bad"><b>Mistake:</b> raise top_k too cao make synthesis gets noisy and waste token.</p>
           </div>
         </div>
       </article>
@@ -721,12 +744,12 @@ for n in nodes:
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Module tổng hợp answer từ query + retrieved nodes.</div>
-            <div class="fact"><b>Khi dùng</b> Custom retrieval pipeline, thay response mode, citation strategy.</div>
+            <div class="fact"><b>Concept</b> Module that synthesizes answers from the query plus retrieved nodes.</div>
+            <div class="fact"><b>Use when</b> Custom retrieval pipeline, thay response mode, citation strategy.</div>
             <div class="fact"><b>Constructor</b> <code>get_response_synthesizer(response_mode=...)</code></div>
             <div class="fact"><b>Modes</b> <code>compact</code>, <code>refine</code>, <code>tree_summarize</code>, <code>no_text</code>.</div>
           </div>
-          <pre><code>from llama_index.core import get_response_synthesizer
+          <pre class="language-python"><code class="language-python">from llama_index.core import get_response_synthesizer
 from llama_index.core.query_engine import RetrieverQueryEngine
 
 synthesizer = get_response_synthesizer(
@@ -740,8 +763,8 @@ query_engine = RetrieverQueryEngine.from_args(
 
 response = query_engine.query("Summarize the contract")</code></pre>
           <div class="note">
-            <p><b>Best:</b> chọn response mode theo tài liệu: short QA, long summary, citations.</p>
-            <p class="bad"><b>Mistake:</b> dùng một response mode cho mọi use case mà không đo quality/cost.</p>
+            <p><b>Best:</b> Choose response mode by document/task type: short QA, long summaries, or citations.</p>
+            <p class="bad"><b>Mistake:</b> Use one response mode for every use case without measuring quality/cost.</p>
           </div>
         </div>
       </article>
@@ -756,12 +779,12 @@ response = query_engine.query("Summarize the contract")</code></pre>
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Postprocessor chỉnh danh sách nodes sau retrieval trước synthesis.</div>
-            <div class="fact"><b>Khi dùng</b> Reranking, metadata filtering, similarity cutoff, context compression.</div>
+            <div class="fact"><b>Concept</b> Postprocessors modify retrieved nodes before synthesis.</div>
+            <div class="fact"><b>Use when</b> Reranking, metadata filtering, similarity cutoff, context compression.</div>
             <div class="fact"><b>Import</b> <code>SimilarityPostprocessor</code>, reranker packages.</div>
-            <div class="fact"><b>Parameter</b> <code>node_postprocessors=[...]</code> trong query engine.</div>
+            <div class="fact"><b>Parameter</b> <code>node_postprocessors=[...]</code> in query engine.</div>
           </div>
-          <pre><code>from llama_index.core.postprocessor import SimilarityPostprocessor
+          <pre class="language-python"><code class="language-python">from llama_index.core.postprocessor import SimilarityPostprocessor
 
 query_engine = index.as_query_engine(
     similarity_top_k=10,
@@ -772,8 +795,8 @@ query_engine = index.as_query_engine(
 
 response = query_engine.query("What changed in v2?")</code></pre>
           <div class="note">
-            <p><b>Best:</b> rerank/cutoff giúp giảm context noise khi corpus lớn.</p>
-            <p class="bad"><b>Mistake:</b> cutoff quá cao làm mất recall hoặc không log nodes bị loại.</p>
+            <p><b>Best:</b> Rerank/cutoff reduces context noise for large corpora.</p>
+            <p class="bad"><b>Mistake:</b> cutoff too cao make lose recall or not log nodes gets removed.</p>
           </div>
         </div>
       </article>
@@ -788,12 +811,12 @@ response = query_engine.query("What changed in v2?")</code></pre>
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Chat engine giữ conversation context và query index theo lượt chat.</div>
-            <div class="fact"><b>Khi dùng</b> Chatbot over docs, support assistant, conversational RAG.</div>
+            <div class="fact"><b>Concept</b> Chat engines keep conversation context and query the index turn by turn.</div>
+            <div class="fact"><b>Use when</b> Chatbot over docs, support assistant, conversational RAG.</div>
             <div class="fact"><b>Constructor</b> <code>index.as_chat_engine(chat_mode=...)</code></div>
             <div class="fact"><b>Methods</b> <code>chat()</code>, <code>stream_chat()</code>, <code>reset()</code>.</div>
           </div>
-          <pre><code>chat_engine = index.as_chat_engine(
+          <pre class="language-python"><code class="language-python">chat_engine = index.as_chat_engine(
     chat_mode="context",
     similarity_top_k=4,
     system_prompt="Answer from the docs. Cite sources.",
@@ -806,8 +829,8 @@ stream = chat_engine.stream_chat("Summarize it in bullets")
 for token in stream.response_gen:
     print(token, end="")</code></pre>
           <div class="note">
-            <p><b>Best:</b> dùng chat engine khi cần multi-turn; vẫn giới hạn history/context.</p>
-            <p class="bad"><b>Mistake:</b> dùng query engine stateless cho chatbot rồi tự nối history thủ công.</p>
+            <p><b>Best:</b> Use chat engines for multi-turn use cases, while still limiting history/context.</p>
+            <p class="bad"><b>Mistake:</b> Use a stateless query engine for chatbots and manually concatenate history.</p>
           </div>
         </div>
       </article>
@@ -822,12 +845,12 @@ for token in stream.response_gen:
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Tools là callable/query engine có metadata để agent chọn dùng.</div>
-            <div class="fact"><b>Khi dùng</b> Agent cần calculator, APIs, search, hoặc query engine chuyên biệt.</div>
+            <div class="fact"><b>Concept</b> Tools are callables/query engines with metadata that agents use for selection.</div>
+            <div class="fact"><b>Use when</b> Agents need calculators, APIs, search, or specialized query engines.</div>
             <div class="fact"><b>Import</b> <code>FunctionTool</code>, <code>QueryEngineTool</code>, <code>ToolMetadata</code></div>
-            <div class="fact"><b>Methods</b> <code>from_defaults()</code>, callable function với type hints/docstring.</div>
+            <div class="fact"><b>Methods</b> <code>from_defaults()</code>; callable functions should have type hints and docstrings.</div>
           </div>
-          <pre><code>from llama_index.core.tools import (
+          <pre class="language-python"><code class="language-python">from llama_index.core.tools import (
     FunctionTool,
     QueryEngineTool,
     ToolMetadata,
@@ -847,8 +870,8 @@ docs_tool = QueryEngineTool(
     ),
 )</code></pre>
           <div class="note">
-            <p><b>Best:</b> tool name/description cụ thể; function có type hints và docstring rõ.</p>
-            <p class="bad"><b>Mistake:</b> agent có quá nhiều tools mơ hồ hoặc tool side effect không guardrail.</p>
+            <p><b>Best:</b> Use specific tool names/descriptions; functions should have clear type hints and docstrings.</p>
+            <p class="bad"><b>Mistake:</b> agent has too many tools ambiguous or tool side effect not guardrail.</p>
           </div>
         </div>
       </article>
@@ -863,12 +886,12 @@ docs_tool = QueryEngineTool(
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Agent dùng LLM chọn tools nhiều bước cho tới khi hoàn thành task.</div>
-            <div class="fact"><b>Khi dùng</b> Model cần quyết định query engine/tool/API nào để gọi.</div>
+            <div class="fact"><b>Concept</b> Agents use the LLM to choose tools across multiple steps until the task is complete.</div>
+            <div class="fact"><b>Use when</b> The model must decide which query engine, tool, or API to call.</div>
             <div class="fact"><b>Import</b> <code>from llama_index.core.agent.workflow import FunctionAgent</code></div>
-            <div class="fact"><b>Methods</b> Async <code>run(user_msg=...)</code>, streaming tùy model.</div>
+            <div class="fact"><b>Methods</b> Async <code>run(user_msg=...)</code>, with streaming depending on the model/runtime.</div>
           </div>
-          <pre><code>from llama_index.core.agent.workflow import FunctionAgent
+          <pre class="language-python"><code class="language-python">from llama_index.core.agent.workflow import FunctionAgent
 from llama_index.llms.openai import OpenAI
 
 def add(a: float, b: float) -> float:
@@ -888,8 +911,8 @@ response = await agent.run(
 )
 print(response)</code></pre>
           <div class="note">
-            <p><b>Best:</b> dùng agent khi cần tool selection; dùng query engine khi task chỉ là QA cố định.</p>
-            <p class="bad"><b>Mistake:</b> cho agent quyết định mọi thứ trong khi retrieval pipeline cần deterministic.</p>
+            <p><b>Best:</b> Use agents for tool selection; use query engines for fixed QA workflows.</p>
+            <p class="bad"><b>Mistake:</b> Let agents decide everything when the retrieval pipeline should be deterministic.</p>
           </div>
         </div>
       </article>
@@ -904,12 +927,12 @@ print(response)</code></pre>
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Ép output theo schema Pydantic thay vì parse text tự do.</div>
-            <div class="fact"><b>Khi dùng</b> Extraction, classification, agent final answer, typed API output.</div>
+            <div class="fact"><b>Concept</b> Constrain output with a Pydantic schema instead of parsing free-form text.</div>
+            <div class="fact"><b>Use when</b> Extraction, classification, agent final answer, typed API output.</div>
             <div class="fact"><b>Import</b> <code>BaseModel</code>; LLM structured predict APIs.</div>
             <div class="fact"><b>Methods</b> <code>structured_predict()</code>, agent structured output patterns.</div>
           </div>
-          <pre><code>from pydantic import BaseModel, Field
+          <pre class="language-python"><code class="language-python">from pydantic import BaseModel, Field
 from llama_index.llms.openai import OpenAI
 
 class ContactInfo(BaseModel):
@@ -926,8 +949,8 @@ info = llm.structured_predict(
 
 print(info.email)</code></pre>
           <div class="note">
-            <p><b>Best:</b> schema chặt, descriptions ngắn, validate edge cases.</p>
-            <p class="bad"><b>Mistake:</b> yêu cầu JSON bằng prompt nhưng không validate bằng schema.</p>
+            <p><b>Best:</b> Use strict schemas, short field descriptions, and edge-case validation.</p>
+            <p class="bad"><b>Mistake:</b> Ask for JSON in a prompt without validating against a schema.</p>
           </div>
         </div>
       </article>
@@ -942,12 +965,12 @@ print(info.email)</code></pre>
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Workflow chia app thành steps nhận Event và trả Event kế tiếp.</div>
-            <div class="fact"><b>Khi dùng</b> Branches, loops, async orchestration, human-in-the-loop, agentic RAG.</div>
+            <div class="fact"><b>Concept</b> Workflows split an app into steps that receive Events and return the next Event.</div>
+            <div class="fact"><b>Use when</b> Branches, loops, async orchestration, human-in-the-loop, agentic RAG.</div>
             <div class="fact"><b>Import</b> <code>Workflow</code>, <code>step</code>, <code>Event</code>, <code>StartEvent</code>, <code>StopEvent</code></div>
             <div class="fact"><b>Methods</b> <code>run()</code>, handler awaitable, <code>stream_events()</code>.</div>
           </div>
-          <pre><code>from llama_index.core.workflow import (
+          <pre class="language-python"><code class="language-python">from llama_index.core.workflow import (
     Workflow,
     step,
     Event,
@@ -972,8 +995,8 @@ class RAGWorkflow(Workflow):
 
 result = await RAGWorkflow(timeout=60).run(question="What changed?")</code></pre>
           <div class="note">
-            <p><b>Best:</b> type events rõ; dùng plain Python cho branches/loops; validate workflow trong tests.</p>
-            <p class="bad"><b>Mistake:</b> nhét workflow phức tạp vào một query engine callback khó debug.</p>
+            <p><b>Best:</b> type events clear; use plain Python for branches/loops; validate workflow in tests.</p>
+            <p class="bad"><b>Mistake:</b> Hide complex workflow logic inside query-engine callbacks that are hard to debug.</p>
           </div>
         </div>
       </article>
@@ -988,12 +1011,12 @@ result = await RAGWorkflow(timeout=60).run(question="What changed?")</code></pre
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Prompt templates điều khiển synthesis, QA, refine, agents, structured extraction.</div>
-            <div class="fact"><b>Khi dùng</b> Domain-specific tone, citation rules, extraction instructions.</div>
+            <div class="fact"><b>Concept</b> Prompt templates control synthesis, QA, refine steps, agents, and structured extraction.</div>
+            <div class="fact"><b>Use when</b> Domain-specific tone, citation rules, extraction instructions.</div>
             <div class="fact"><b>Import</b> <code>PromptTemplate</code></div>
             <div class="fact"><b>Methods</b> <code>get_prompts()</code>, <code>update_prompts()</code>, template formatting.</div>
           </div>
-          <pre><code>from llama_index.core import PromptTemplate
+          <pre class="language-python"><code class="language-python">from llama_index.core import PromptTemplate
 
 qa_prompt = PromptTemplate(
     "Context:\n{context_str}\n\n"
@@ -1007,8 +1030,8 @@ query_engine.update_prompts({
 
 prompts = query_engine.get_prompts()</code></pre>
           <div class="note">
-            <p><b>Best:</b> giữ prompts ngắn, test bằng eval set, version prompt changes.</p>
-            <p class="bad"><b>Mistake:</b> prompt chống hallucination nhưng retrieval context lại sai hoặc thiếu.</p>
+            <p><b>Best:</b> Keep prompts short, test them with an eval set, and version prompt changes.</p>
+            <p class="bad"><b>Mistake:</b> Try to fix hallucination with prompts while retrieval context is wrong or missing.</p>
           </div>
         </div>
       </article>
@@ -1023,12 +1046,12 @@ prompts = query_engine.get_prompts()</code></pre>
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Router chọn query engine/tool phù hợp dựa trên query và metadata.</div>
-            <div class="fact"><b>Khi dùng</b> Nhiều indexes theo domain, summary vs vector search, SQL vs docs.</div>
-            <div class="fact"><b>Import</b> Router query engine/selectors từ <code>llama_index.core</code>.</div>
+            <div class="fact"><b>Concept</b> Routers choose the appropriate query engine/tool based on query and metadata.</div>
+            <div class="fact"><b>Use when</b> Multiple indexes by domain, summary vs vector search, SQL vs docs.</div>
+            <div class="fact"><b>Import</b> Router query engines/selectors from <code>llama_index.core</code>.</div>
             <div class="fact"><b>Pattern</b> Build tools -> selector -> router engine.</div>
           </div>
-          <pre><code>from llama_index.core.tools import QueryEngineTool, ToolMetadata
+          <pre class="language-python"><code class="language-python">from llama_index.core.tools import QueryEngineTool, ToolMetadata
 from llama_index.core.query_engine import RouterQueryEngine
 from llama_index.core.selectors import LLMSingleSelector
 
@@ -1045,8 +1068,8 @@ router = RouterQueryEngine(
     query_engine_tools=[policy_tool, api_tool],
 )</code></pre>
           <div class="note">
-            <p><b>Best:</b> tool descriptions phải phân biệt rõ domain và dữ liệu.</p>
-            <p class="bad"><b>Mistake:</b> routers chồng routers quá nhiều mà không trace selection.</p>
+            <p><b>Best:</b> Tool descriptions must clearly distinguish domain and data scope.</p>
+            <p class="bad"><b>Mistake:</b> Stack too many routers without tracing selection decisions.</p>
           </div>
         </div>
       </article>
@@ -1061,12 +1084,12 @@ router = RouterQueryEngine(
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Index trích entities/relations thành graph để query theo quan hệ.</div>
-            <div class="fact"><b>Khi dùng</b> Knowledge graph, entity-centric QA, relationship-heavy corpora.</div>
+            <div class="fact"><b>Concept</b> Index extracts entities/relations into a graph for relationship-oriented queries.</div>
+            <div class="fact"><b>Use when</b> Knowledge graph, entity-centric QA, relationship-heavy corpora.</div>
             <div class="fact"><b>Import</b> <code>PropertyGraphIndex</code></div>
             <div class="fact"><b>Methods</b> <code>from_documents()</code>, <code>as_query_engine()</code>, graph store integrations.</div>
           </div>
-          <pre><code>from llama_index.core import PropertyGraphIndex
+          <pre class="language-python"><code class="language-python">from llama_index.core import PropertyGraphIndex
 
 graph_index = PropertyGraphIndex.from_documents(
     documents,
@@ -1081,8 +1104,8 @@ response = query_engine.query(
     "Which companies are related to product X?"
 )</code></pre>
           <div class="note">
-            <p><b>Best:</b> dùng khi quan hệ/entity quan trọng hơn similarity search thuần.</p>
-            <p class="bad"><b>Mistake:</b> dùng graph index cho corpus đơn giản khiến pipeline chậm và phức tạp.</p>
+            <p><b>Best:</b> Use when relationships/entities matter more than pure similarity search.</p>
+            <p class="bad"><b>Mistake:</b> Use a graph index for a simple corpus and make the pipeline slower and more complex.</p>
           </div>
         </div>
       </article>
@@ -1097,12 +1120,12 @@ response = query_engine.query(
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Eval kiểm tra faithfulness, relevancy, correctness, retrieval quality.</div>
-            <div class="fact"><b>Khi dùng</b> Tuning chunking/top_k/prompts, regression tests cho RAG.</div>
-            <div class="fact"><b>Import</b> Evaluators từ <code>llama_index.core.evaluation</code>.</div>
+            <div class="fact"><b>Concept</b> Evaluators check faithfulness, relevancy, correctness, and retrieval quality.</div>
+            <div class="fact"><b>Use when</b> Tuning chunking/top_k/prompts, regression tests for RAG.</div>
+            <div class="fact"><b>Import</b> Evaluators from <code>llama_index.core.evaluation</code>.</div>
             <div class="fact"><b>Pattern</b> Dataset queries -> run pipeline -> evaluator -> compare versions.</div>
           </div>
-          <pre><code>from llama_index.core.evaluation import (
+          <pre class="language-python"><code class="language-python">from llama_index.core.evaluation import (
     FaithfulnessEvaluator,
     RelevancyEvaluator,
 )
@@ -1120,8 +1143,8 @@ rel_result = relevancy.evaluate_response(
     response=response,
 )</code></pre>
           <div class="note">
-            <p><b>Best:</b> tạo eval set nhỏ nhưng thật; track retrieval và generation riêng.</p>
-            <p class="bad"><b>Mistake:</b> tune bằng vài câu hỏi thủ công rồi deploy không regression test.</p>
+            <p><b>Best:</b> Create a small but realistic eval set; track retrieval and generation separately.</p>
+            <p class="bad"><b>Mistake:</b> Tune with a few manual questions and deploy without regression tests.</p>
           </div>
         </div>
       </article>
@@ -1136,12 +1159,12 @@ rel_result = relevancy.evaluate_response(
         </div>
         <div class="body">
           <div class="mini">
-            <div class="fact"><b>Khái niệm</b> Callback/instrumentation trace retrieval, LLM calls, token usage, latency.</div>
-            <div class="fact"><b>Khi dùng</b> Debug wrong answers, cost tracking, production monitoring.</div>
+            <div class="fact"><b>Concept</b> Callback/instrumentation trace retrieval, LLM calls, token usage, latency.</div>
+            <div class="fact"><b>Use when</b> Debug wrong answers, cost tracking, production monitoring.</div>
             <div class="fact"><b>Import</b> <code>CallbackManager</code>, debug/token handlers, external tracing tools.</div>
-            <div class="fact"><b>Config</b> Set qua <code>Settings.callback_manager</code>.</div>
+            <div class="fact"><b>Config</b> Set through <code>Settings.callback_manager</code>.</div>
           </div>
-          <pre><code>from llama_index.core import Settings
+          <pre class="language-python"><code class="language-python">from llama_index.core import Settings
 from llama_index.core.callbacks import (
     CallbackManager,
     LlamaDebugHandler,
@@ -1155,7 +1178,7 @@ response = query_engine.query("Why did retrieval fail?")
 events = debug.get_event_pairs()</code></pre>
           <div class="note">
             <p><b>Best:</b> log retrieved nodes, prompts, latency, token usage, model/index versions.</p>
-            <p class="bad"><b>Mistake:</b> chỉ log final answer; không có trace thì khó biết lỗi nằm ở retrieval hay synthesis.</p>
+            <p class="bad"><b>Mistake:</b> Only log the final answer; without traces it is hard to know whether retrieval or synthesis failed.</p>
           </div>
         </div>
       </article>
@@ -1175,7 +1198,7 @@ events = debug.get_event_pairs()</code></pre>
             <div class="fact"><b>Storage</b> Durable vector store, backups, delete/update path.</div>
             <div class="fact"><b>Safety</b> PII handling, tenant filters, eval gates, cost controls.</div>
           </div>
-          <pre><code># Production pattern
+          <pre class="language-python"><code class="language-python"># Production pattern
 1. Load docs with stable IDs and metadata.
 2. Transform/chunk/embed in an ingestion job.
 3. Persist to vector store + document store.
@@ -1187,6 +1210,101 @@ events = debug.get_event_pairs()</code></pre>
             <p><b>Best:</b> separate ingestion service from query API; version everything.</p>
             <p class="bad"><b>Mistake:</b> doing data ingestion, index build, and user query in one request path.</p>
           </div>
+        </div>
+      </article>
+
+      <article id="advanced-api" class="card span-3">
+        <div class="card-head">
+          <div class="icon blue">API</div>
+          <div>
+            <h2>Advanced API Surface</h2>
+            <div class="caption">Core LlamaIndex components and methods worth memorizing</div>
+          </div>
+        </div>
+        <div class="body">
+          <ul class="mono-list">
+            <li><code>Settings</code><br>Global defaults for <code>llm</code>, <code>embed_model</code>, <code>text_splitter</code>, <code>chunk_size</code>, <code>callback_manager</code>.</li>
+            <li><code>Document</code><br>Raw data plus metadata; use stable ids, source, page, tenant, permissions, and updated_at.</li>
+            <li><code>TextNode</code><br>Retrieval unit with text, metadata, relationships, embedding, and node id.</li>
+            <li><code>SentenceSplitter</code><br><code>get_nodes_from_documents</code>, chunk size, overlap, paragraph/sentence-aware splitting.</li>
+            <li><code>IngestionPipeline</code><br><code>run</code>, <code>arun</code>, transformations, metadata extractors, embedding transforms, caching, vector store writes.</li>
+            <li><code>VectorStoreIndex</code><br><code>from_documents</code>, <code>from_vector_store</code>, <code>as_retriever</code>, <code>as_query_engine</code>, <code>as_chat_engine</code>, <code>insert</code>.</li>
+            <li><code>StorageContext</code><br><code>from_defaults</code>, <code>persist</code>, vector store, docstore, index store, graph store wiring.</li>
+            <li><code>Retriever</code><br><code>retrieve</code>, <code>aretrieve</code>, top-k retrieval, custom retrievers, hybrid retrievers, router retrievers.</li>
+            <li><code>QueryEngine</code><br><code>query</code>, <code>aquery</code>, source nodes, response synthesizer, node postprocessors.</li>
+            <li><code>ResponseSynthesizer</code><br><code>compact</code>, <code>refine</code>, <code>tree_summarize</code>, <code>no_text</code>, citation-oriented synthesis.</li>
+            <li><code>FunctionTool</code><br>Wrap typed Python functions as agent tools; rely on names, docstrings, and schemas.</li>
+            <li><code>FunctionAgent</code><br>Tool-calling agent with <code>run</code>, streaming handlers, memory/context, and structured outputs.</li>
+            <li><code>Workflow</code><br><code>@step</code>, <code>StartEvent</code>, <code>StopEvent</code>, custom events, <code>run</code>, <code>stream_events</code>.</li>
+            <li><code>Evaluation</code><br><code>FaithfulnessEvaluator</code>, <code>RelevancyEvaluator</code>, retrieval eval, batch eval, regression datasets.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article id="agentic-rag" class="card span-2">
+        <div class="card-head">
+          <div class="icon gold">AR</div>
+          <div>
+            <h2>Agentic RAG Pattern</h2>
+            <div class="caption">Multiple query engines as tools, chosen by an agent</div>
+          </div>
+        </div>
+        <div class="body">
+          <pre class="language-python"><code class="language-python">from llama_index.core.tools import QueryEngineTool, ToolMetadata
+from llama_index.core.agent.workflow import FunctionAgent
+
+policy_tool = QueryEngineTool(
+    query_engine=policy_index.as_query_engine(similarity_top_k=5),
+    metadata=ToolMetadata(
+        name="policy_docs",
+        description="Use for HR, security, and compliance policy questions.",
+    ),
+)
+
+api_tool = QueryEngineTool(
+    query_engine=api_index.as_query_engine(similarity_top_k=8),
+    metadata=ToolMetadata(
+        name="api_docs",
+        description="Use for SDK, API endpoint, error code, and integration questions.",
+    ),
+)
+
+agent = FunctionAgent(
+    tools=[policy_tool, api_tool],
+    llm=llm,
+    system_prompt=(
+        "Choose the most relevant tool. Cite source nodes. "
+        "If neither tool has evidence, say you do not know."
+    ),
+)
+
+response = await agent.run(
+    user_msg="What does error E_AUTH_42 mean and who owns the fix?"
+)</code></pre>
+          <div class="note">
+            <p><b>Use this for:</b> multiple knowledge bases, mixed APIs/docs, domain-specific tools, and questions requiring tool selection.</p>
+            <p class="bad"><b>Avoid it for:</b> simple single-index Q&A where a deterministic query engine is easier to evaluate and debug.</p>
+          </div>
+        </div>
+      </article>
+
+      <article id="retrieval-tuning" class="card">
+        <div class="card-head">
+          <div class="icon red">RET</div>
+          <div>
+            <h2>Retrieval Tuning</h2>
+            <div class="caption">Improve recall and precision before blaming the LLM</div>
+          </div>
+        </div>
+        <div class="body">
+          <ul class="mono-list">
+            <li><code>similarity_top_k</code><br>Start small, evaluate recall, then increase only when evidence is missing.</li>
+            <li><code>Node postprocessors</code><br>Similarity cutoff, metadata filters, recency filters, rerankers, context trimming.</li>
+            <li><code>Hybrid search</code><br>Use when exact terms, error codes, names, or IDs matter as much as semantics.</li>
+            <li><code>RouterQueryEngine</code><br>Route between vector search, summary index, SQL, graph, or external tools.</li>
+            <li><code>PropertyGraphIndex</code><br>Use when entity relationships are the real retrieval target.</li>
+            <li><code>Eval loop</code><br>Track retrieved nodes, response text, source accuracy, cost, latency, and version ids.</li>
+          </ul>
         </div>
       </article>
 
@@ -1220,7 +1338,7 @@ events = debug.get_event_pairs()</code></pre>
     <footer class="footer">
       <div>
         LlamaIndex Cheatsheet - Core Components Reference.
-        Tổng hợp từ tài liệu chính thức LlamaIndex, đối chiếu ngày 2026-06-30.
+        Compiled from official LlamaIndex docs, checked on 2026-06-30.
       </div>
       <span>
         <a href="https://developers.llamaindex.ai/python/framework/">framework docs</a>
@@ -1232,5 +1350,9 @@ events = debug.get_event_pairs()</code></pre>
       </span>
     </footer>
   </main>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-json.min.js"></script>
 </body>
 </html>
