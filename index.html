@@ -993,6 +993,35 @@ result = await workflow.run(question="What changed?")</code></pre>
         </div>
       </article>
 
+      <article id="workflow-streaming" class="card">
+        <div class="card-head">
+          <div class="icon blue">EV</div>
+          <div>
+            <h2>Workflow Streaming</h2>
+            <div class="caption">Expose progress and intermediate events from async workflows</div>
+          </div>
+        </div>
+        <div class="body">
+          <pre class="language-python"><code class="language-python">from llama_index.core.workflow import Event
+
+class Progress(Event):
+    message: str
+
+handler = workflow.run(question="What changed in the policy?")
+
+async for event in handler.stream_events():
+    if isinstance(event, Progress):
+        print("progress:", event.message)
+
+result = await handler
+print(result)</code></pre>
+          <div class="note">
+            <p><b>Best:</b> Stream progress for long retrieval, reranking, agent-tool, or human-review workflows.</p>
+            <p class="bad"><b>Mistake:</b> Hide all intermediate failures until the final answer times out.</p>
+          </div>
+        </div>
+      </article>
+
       <article id="prompts" class="card">
         <div class="card-head">
           <div class="icon blue">PR</div>
@@ -1329,6 +1358,24 @@ pipeline = IngestionPipeline(
         </div>
       </article>
 
+      <article id="managed-ingestion" class="card">
+        <div class="card-head">
+          <div class="icon blue">OPS</div>
+          <div>
+            <h2>Managed Ingestion Boundary</h2>
+            <div class="caption">When local pipelines should move to a managed parsing/indexing service</div>
+          </div>
+        </div>
+        <div class="body">
+          <ul class="mono-list">
+            <li><code>Use managed</code><br>High-volume PDFs, scheduled syncs, OCR/layout parsing, multi-source connectors, and operational SLAs.</li>
+            <li><code>Keep local</code><br>Small corpora, offline notebooks, custom transforms, or strict data-residency constraints.</li>
+            <li><code>Boundary</code><br>Persist stable document ids, metadata, index version, and permissions regardless of where parsing runs.</li>
+            <li><code>Verify</code><br>Run retrieval evals after parser/index upgrades before routing production traffic.</li>
+          </ul>
+        </div>
+      </article>
+
       <article id="advanced-api" class="card span-3">
         <div class="card-head">
           <div class="icon blue">API</div>
@@ -1634,12 +1681,33 @@ for case in eval_cases:
           </ul>
         </div>
       </article>
+      <article id="keywords" class="card span-3">
+        <div class="card-head">
+          <div class="icon gold">KEY</div>
+          <div>
+            <h2>Keywords</h2>
+            <div class="caption">Core LlamaIndex terms for production RAG systems</div>
+          </div>
+        </div>
+        <div class="body">
+          <ul class="mono-list">
+            <li><code>Document</code><br>Raw source text plus metadata such as source, tenant, page, permissions, and version.</li>
+            <li><code>Node</code><br>Chunk-level representation used for indexing, retrieval, synthesis, and citations.</li>
+            <li><code>IngestionPipeline</code><br>Framework pipeline for parsing, splitting, metadata extraction, embeddings, cache, and vector writes.</li>
+            <li><code>VectorStoreIndex</code><br>Default semantic index over nodes; exposes retrievers, query engines, and chat engines.</li>
+            <li><code>QueryEngine</code><br>One-shot retrieval plus response synthesis interface.</li>
+            <li><code>Retriever</code><br>Lower-level component for fetching nodes before custom rerank/synthesis.</li>
+            <li><code>NodePostprocessor</code><br>Filtering, similarity cutoff, reranking, recency, or context compression after retrieval.</li>
+            <li><code>Workflow</code><br>Typed event-driven orchestration for branches, loops, agentic RAG, and human review.</li>
+          </ul>
+        </div>
+      </article>
     </section>
 
     <footer class="footer">
       <div>
         LlamaIndex Cheatsheet - Core Components Reference.
-        Compiled from official LlamaIndex docs, checked on 2026-06-30.
+        Compiled from official LlamaIndex docs, checked on 2026-07-01.
       </div>
       <span>
         <a href="https://developers.llamaindex.ai/python/framework/">framework docs</a>
