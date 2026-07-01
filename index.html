@@ -664,7 +664,7 @@ index = VectorStoreIndex.from_documents(
         <div class="body">
           <div class="mini">
             <div class="fact"><b>Concept</b> Query engines accept queries, retrieve nodes, and synthesize responses.</div>
-            <div class="fact"><b>Use when</b> Simple RAG Q&A APIs, document Q&A, and one-shot answers.</div>
+            <div class="fact"><b>Use when</b> Simple RAG Q&amp;A APIs, document Q&amp;A, and one-shot answers.</div>
             <div class="fact"><b>Constructor</b> <code>index.as_query_engine(...)</code>, <code>RetrieverQueryEngine.from_args(...)</code></div>
             <div class="fact"><b>Methods</b> <code>query()</code>, <code>aquery()</code>, source nodes in response.</div>
           </div>
@@ -1204,7 +1204,7 @@ async def sse_chat_endpoint(payload: QueryPayload):
     
     async def sse_generator():
         # Lặp không chặn qua generator tokens
-        for token in response_stream.async_response_gen():
+        async for token in response_stream.async_response_gen():
             yield f"data: {token}\n\n"
             
     return StreamingResponse(sse_generator(), media_type="text/event-stream")</code></pre>
@@ -1424,7 +1424,7 @@ response = await agent.arun(
 )</code></pre>
           <div class="note">
             <p><b>Use this for:</b> multiple knowledge bases, mixed APIs/docs, domain-specific tools, and questions requiring tool selection.</p>
-            <p class="bad"><b>Avoid it for:</b> simple single-index Q&A where a deterministic query engine is easier to evaluate and debug.</p>
+            <p class="bad"><b>Avoid it for:</b> simple single-index Q&amp;A where a deterministic query engine is easier to evaluate and debug.</p>
           </div>
         </div>
       </article>
