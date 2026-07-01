@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -187,12 +187,11 @@
       color: #163963;
       font-size: 11px;
       line-height: 1.55;
-      white-space: pre;
     }
 
     pre[class*="language-"],
     code[class*="language-"] {
-      background: #fffaff;
+      background: #fffaff !important;
       color: #172033;
       text-shadow: none;
       font-size: 11px;
@@ -201,15 +200,6 @@
       border-left-color: #326aab;
       box-shadow: inset 0 0 0 1px rgba(124, 58, 237, .18), 0 8px 18px rgba(36, 88, 154, .08);
     }
-    .token.comment, .token.prolog, .token.doctype, .token.cdata { color: #69758a; font-style: italic; }
-    .token.keyword { color: #7c3aed; font-weight: 900; }
-    .token.string, .token.char { color: #047857; font-weight: 650; }
-    .token.function { color: #0369a1; font-weight: 800; }
-    .token.class-name, .token.constant { color: #b45309; font-weight: 850; }
-    .token.number, .token.boolean { color: #dc2626; font-weight: 800; }
-    .token.operator, .token.punctuation { color: #334155; }
-    .token.builtin, .token.decorator { color: #be185d; font-weight: 800; }
-    .token.attr-name, .token.property { color: #c2410c; font-weight: 750; }
 
     .note {
       display: grid;
@@ -322,20 +312,24 @@
             <div class="fact"><b>Install</b> <code>pip install -U llama-index</code> or split provider packages.</div>
             <div class="fact"><b>Core Flow</b> Load -> parse -> index -> retrieve -> synthesize -> evaluate.</div>
           </div>
-          <pre class="language-python"><code class="language-python">pip install -U llama-index
-pip install -U llama-index-llms-openai
-pip install -U llama-index-embeddings-openai
+          <pre class="language-python"><code class="language-python"># pip install -U llama-index llama-index-llms-openai llama-index-embeddings-openai
+import asyncio
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 
-from llama_index.core import (
-    VectorStoreIndex,
-    SimpleDirectoryReader,
-    Settings,
-)
+async def main():
+    # Đọc dữ liệu không chặn (non-blocking)
+    reader = SimpleDirectoryReader("data")
+    documents = await asyncio.to_thread(reader.load_data)
+    
+    # Tạo index semantic
+    index = VectorStoreIndex.from_documents(documents)
+    
+    # Query bất đồng bộ
+    query_engine = index.as_query_engine()
+    response = await query_engine.aquery("Summarize the docs")
+    print(response)
 
-documents = SimpleDirectoryReader("data").load_data()
-index = VectorStoreIndex.from_documents(documents)
-query_engine = index.as_query_engine()
-response = query_engine.query("Summarize the docs")</code></pre>
+asyncio.run(main())</code></pre>
           <div class="note">
             <p><b>Best:</b> Start with a simple RAG pipeline, then optimize retrieval and synthesis layers separately.</p>
             <p class="bad"><b>Mistake:</b> Treat LlamaIndex as only a vector DB wrapper; query engines and synthesis are also central.</p>
@@ -391,20 +385,23 @@ Settings.text_splitter = SentenceSplitter(
             <div class="fact"><b>Concept</b> LLMs generate/synthesize; embedding models convert text into vectors.</div>
             <div class="fact"><b>Use when</b> Query engine, response synthesis, agents, semantic retrieval.</div>
             <div class="fact"><b>Constructors</b> <code>OpenAI(model=...)</code>, <code>OpenAIEmbedding(model=...)</code></div>
-            <div class="fact"><b>Methods</b> <code>complete</code>, <code>chat</code>, <code>stream_complete</code>, embedding qua index.</div>
+            <div class="fact"><b>Methods</b> <code>complete</code>, <code>chat</code>, <code>stream_complete</code>, embedding values.</div>
           </div>
           <pre class="language-python"><code class="language-python">from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.core import Settings
 
 llm = OpenAI(model="gpt-4o-mini", temperature=0.1)
 embed_model = OpenAIEmbedding(model="text-embedding-3-small")
 
-completion = llm.complete("Explain RAG in one sentence.")
-chat = llm.chat([
-    {"role": "system", "content": "Be concise."},
-    {"role": "user", "content": "What is LlamaIndex?"},
-])
-
+# Async LLM calls
+async def run_calls():
+    completion = await llm.acomplete("Explain RAG in one sentence.")
+    chat = await llm.achat([
+        {"role": "system", "content": "Be concise."},
+        {"role": "user", "content": "What is LlamaIndex?"},
+    ])
+    
 Settings.llm = llm
 Settings.embed_model = embed_model</code></pre>
           <div class="note">
@@ -425,24 +422,22 @@ Settings.embed_model = embed_model</code></pre>
         <div class="body">
           <div class="mini">
             <div class="fact"><b>Concept</b> Readers/loaders convert files, web pages, databases, and APIs into <code>Document</code> objects.</div>
-            <div class="fact"><b>Use when</b> Ingest data before when parse/chunk/index.</div>
+            <div class="fact"><b>Use when</b> Ingest data before parsing/chunking/indexing.</div>
             <div class="fact"><b>Import</b> <code>SimpleDirectoryReader</code> and connector packages from LlamaHub.</div>
             <div class="fact"><b>Methods</b> <code>load_data()</code>, connector-specific options.</div>
           </div>
-          <pre class="language-python"><code class="language-python">from llama_index.core import SimpleDirectoryReader
+          <pre class="language-python"><code class="language-python">import asyncio
+from llama_index.core import SimpleDirectoryReader
 
-documents = SimpleDirectoryReader(
-    input_dir="data",
-    recursive=True,
-    required_exts=[".pdf", ".md", ".txt"],
-).load_data()
-
-for doc in documents:
-    print(doc.id_, doc.metadata)
-
-# LlamaParse for complex PDFs/tables:
-# pip install llama-parse
-# from llama_parse import LlamaParse</code></pre>
+async def load_docs():
+    reader = SimpleDirectoryReader(
+        input_dir="data",
+        recursive=True,
+        required_exts=[".pdf", ".md", ".txt"],
+    )
+    # Tải dữ liệu bất đồng bộ sử dụng to_thread để tránh nghẽn luồng I/O
+    documents = await asyncio.to_thread(reader.load_data)
+    return documents</code></pre>
           <div class="note">
             <p><b>Best:</b> Keep metadata such as source, page, and tenant_id for filtering, citation, and debugging.</p>
             <p class="bad"><b>Mistake:</b> Ingest noisy raw data or omit source metadata.</p>
@@ -509,9 +504,8 @@ splitter = SentenceSplitter(
     chunk_overlap=120,
 )
 
-nodes = splitter.get_nodes_from_documents(documents)
-
-index = VectorStoreIndex(nodes)</code></pre>
+# Chuyển đổi tài liệu thành các Nodes dạng async-friendly
+nodes = splitter.get_nodes_from_documents(documents)</code></pre>
           <div class="note">
             <p><b>Best:</b> Tune chunking with real queries and evaluate retrieval recall.</p>
             <p class="bad"><b>Mistake:</b> Chunks that are too small lose context; chunks that are too large reduce recall.</p>
@@ -534,21 +528,21 @@ index = VectorStoreIndex(nodes)</code></pre>
             <div class="fact"><b>Import</b> <code>IngestionPipeline</code>, <code>SentenceSplitter</code>, embedding transforms.</div>
             <div class="fact"><b>Methods</b> <code>run()</code>, <code>arun()</code>, optional cache/vector_store.</div>
           </div>
-          <pre class="language-python"><code class="language-python">from llama_index.core.ingestion import IngestionPipeline
+          <pre class="language-python"><code class="language-python">from llama_index.core.ingestion import IngestionPipeline, IngestionCache
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.embeddings.openai import OpenAIEmbedding
 
+# Tích hợp IngestionCache tránh tốn tài nguyên embed lại dữ liệu cũ
 pipeline = IngestionPipeline(
     transformations=[
         SentenceSplitter(chunk_size=800, chunk_overlap=120),
         OpenAIEmbedding(model="text-embedding-3-small"),
     ],
+    cache=IngestionCache()
 )
 
-nodes = pipeline.run(documents=documents)
-
-# You can add metadata extractors, custom transforms,
-# cache, or a vector_store for production ingestion.</code></pre>
+# Thực thi Pipeline bất đồng bộ (Async arun)
+nodes = await pipeline.arun(documents=documents)</code></pre>
           <div class="note">
             <p><b>Best:</b> Build ingestion outside the query path and cache expensive transformations.</p>
             <p class="bad"><b>Mistake:</b> Re-embed the whole corpus on every app start or skip pipeline versioning.</p>
@@ -573,18 +567,16 @@ nodes = pipeline.run(documents=documents)
           </div>
           <pre class="language-python"><code class="language-python">from llama_index.core import VectorStoreIndex
 
-index = VectorStoreIndex.from_documents(
-    documents,
-    show_progress=True,
-)
+# Build index async
+index = VectorStoreIndex(nodes)
 
-query_engine = index.as_query_engine(
-    similarity_top_k=4,
-)
-response = query_engine.query("What are the main findings?")
+# Tạo query engine bất đồng bộ
+query_engine = index.as_query_engine(similarity_top_k=4)
+response = await query_engine.aquery("What are the main findings?")
 
+# Tạo retriever bất đồng bộ
 retriever = index.as_retriever(similarity_top_k=5)
-nodes = retriever.retrieve("main findings")</code></pre>
+retrieved_nodes = await retriever.aretrieve("main findings")</code></pre>
           <div class="note">
             <p><b>Best:</b> Set <code>similarity_top_k</code> by evaluation, not by intuition alone.</p>
             <p class="bad"><b>Mistake:</b> Rebuild indexes in the request path or fail to persist the index/vector store.</p>
@@ -607,19 +599,18 @@ nodes = retriever.retrieve("main findings")</code></pre>
             <div class="fact"><b>Import</b> <code>StorageContext</code>, <code>load_index_from_storage</code></div>
             <div class="fact"><b>Methods</b> <code>persist()</code>, <code>from_defaults()</code>.</div>
           </div>
-          <pre class="language-python"><code class="language-python">from llama_index.core import (
+          <pre class="language-python"><code class="language-python">import asyncio
+from llama_index.core import (
     StorageContext,
     load_index_from_storage,
 )
 
-# Persist
-index.storage_context.persist(persist_dir="./storage")
+# Persist async bằng cách chạy to_thread
+await asyncio.to_thread(index.storage_context.persist, persist_dir="./storage")
 
-# Load later
-storage_context = StorageContext.from_defaults(
-    persist_dir="./storage"
-)
-index = load_index_from_storage(storage_context)</code></pre>
+# Load từ storage bất đồng bộ
+storage_context = StorageContext.from_defaults(persist_dir="./storage")
+index = await asyncio.to_thread(load_index_from_storage, storage_context)</code></pre>
           <div class="note">
             <p><b>Best:</b> Use a durable vector store and backed-up storage in production.</p>
             <p class="bad"><b>Mistake:</b> Only use temporary local storage or load an index with a mismatched embedding model.</p>
@@ -642,10 +633,10 @@ index = load_index_from_storage(storage_context)</code></pre>
             <div class="fact"><b>Import</b> Provider-specific vector store + <code>StorageContext</code>.</div>
             <div class="fact"><b>Methods</b> Use qua <code>VectorStoreIndex.from_vector_store()</code> or storage context.</div>
           </div>
-          <pre class="language-python"><code class="language-python"># Example shape; install provider package first.
-from llama_index.core import StorageContext, VectorStoreIndex
+          <pre class="language-python"><code class="language-python">from llama_index.core import StorageContext, VectorStoreIndex
 from llama_index.vector_stores.chroma import ChromaVectorStore
 
+# In thực tế: Khởi tạo StorageContext tích hợp Chroma Vector DB
 vector_store = ChromaVectorStore(chroma_collection=collection)
 storage_context = StorageContext.from_defaults(
     vector_store=vector_store
@@ -682,19 +673,17 @@ index = VectorStoreIndex.from_documents(
     response_mode="compact",
 )
 
-response = query_engine.query(
+# Async Query
+response = await query_engine.aquery(
     "What does the handbook say about refunds?"
 )
 
 print(response)
 
 for source in response.source_nodes:
-    print(source.score, source.node.metadata.get("source"))
-
-# Async
-# response = await query_engine.aquery("...")</code></pre>
+    print(source.score, source.node.metadata.get("source"))</code></pre>
           <div class="note">
-            <p><b>Best:</b> expose source nodes/citations; tune top_k + response_mode qua eval.</p>
+            <p><b>Best:</b> Expose source nodes/citations; tune top_k + response_mode via evaluation.</p>
             <p class="bad"><b>Mistake:</b> Only read the final answer instead of inspecting retrieved nodes when answers are wrong.</p>
           </div>
         </div>
@@ -719,17 +708,15 @@ for source in response.source_nodes:
     similarity_top_k=8,
 )
 
-nodes = retriever.retrieve("refund policy")
+# Gọi async để lấy các Node liên quan
+nodes = await retriever.aretrieve("refund policy")
 
 for n in nodes:
     print(n.score)
-    print(n.node.get_content()[:300])
-
-# Combine with rerank/postprocessors
-# before response synthesis.</code></pre>
+    print(n.node.get_content()[:300])</code></pre>
           <div class="note">
-            <p><b>Best:</b> test retriever separate with labelled queries before when blame LLM.</p>
-            <p class="bad"><b>Mistake:</b> raise top_k too cao make synthesis gets noisy and waste token.</p>
+            <p><b>Best:</b> Test retriever separately with labeled queries before blaming the LLM.</p>
+            <p class="bad"><b>Mistake:</b> Raising top_k too high makes synthesis noisy and wastes tokens.</p>
           </div>
         </div>
       </article>
@@ -745,7 +732,7 @@ for n in nodes:
         <div class="body">
           <div class="mini">
             <div class="fact"><b>Concept</b> Module that synthesizes answers from the query plus retrieved nodes.</div>
-            <div class="fact"><b>Use when</b> Custom retrieval pipeline, thay response mode, citation strategy.</div>
+            <div class="fact"><b>Use when</b> Custom retrieval pipeline, changing response mode, citation strategy.</div>
             <div class="fact"><b>Constructor</b> <code>get_response_synthesizer(response_mode=...)</code></div>
             <div class="fact"><b>Modes</b> <code>compact</code>, <code>refine</code>, <code>tree_summarize</code>, <code>no_text</code>.</div>
           </div>
@@ -761,7 +748,7 @@ query_engine = RetrieverQueryEngine.from_args(
     response_synthesizer=synthesizer,
 )
 
-response = query_engine.query("Summarize the contract")</code></pre>
+response = await query_engine.aquery("Summarize the contract")</code></pre>
           <div class="note">
             <p><b>Best:</b> Choose response mode by document/task type: short QA, long summaries, or citations.</p>
             <p class="bad"><b>Mistake:</b> Use one response mode for every use case without measuring quality/cost.</p>
@@ -793,10 +780,10 @@ query_engine = index.as_query_engine(
     ],
 )
 
-response = query_engine.query("What changed in v2?")</code></pre>
+response = await query_engine.aquery("What changed in v2?")</code></pre>
           <div class="note">
             <p><b>Best:</b> Rerank/cutoff reduces context noise for large corpora.</p>
-            <p class="bad"><b>Mistake:</b> cutoff too cao make lose recall or not log nodes gets removed.</p>
+            <p class="bad"><b>Mistake:</b> Cutoff too high makes you lose recall, or fails to log nodes that get removed.</p>
           </div>
         </div>
       </article>
@@ -822,11 +809,13 @@ response = query_engine.query("What changed in v2?")</code></pre>
     system_prompt="Answer from the docs. Cite sources.",
 )
 
-response = chat_engine.chat("What is our refund policy?")
+# Async chat call
+response = await chat_engine.achat("What is our refund policy?")
 print(response)
 
-stream = chat_engine.stream_chat("Summarize it in bullets")
-for token in stream.response_gen:
+# Async streaming chat
+stream = await chat_engine.astream_chat("Summarize it in bullets")
+async for token in stream.async_response_gen():
     print(token, end="")</code></pre>
           <div class="note">
             <p><b>Best:</b> Use chat engines for multi-turn use cases, while still limiting history/context.</p>
@@ -871,7 +860,7 @@ docs_tool = QueryEngineTool(
 )</code></pre>
           <div class="note">
             <p><b>Best:</b> Use specific tool names/descriptions; functions should have clear type hints and docstrings.</p>
-            <p class="bad"><b>Mistake:</b> agent has too many tools ambiguous or tool side effect not guardrail.</p>
+            <p class="bad"><b>Mistake:</b> Agent has too many tools causing ambiguity, or lacks tool policy guardrails.</p>
           </div>
         </div>
       </article>
@@ -906,7 +895,7 @@ agent = FunctionAgent(
     ),
 )
 
-response = await agent.run(
+response = await agent.arun(
     user_msg="What is 20 + 22? Then check docs for refund rules."
 )
 print(response)</code></pre>
@@ -930,7 +919,7 @@ print(response)</code></pre>
             <div class="fact"><b>Concept</b> Constrain output with a Pydantic schema instead of parsing free-form text.</div>
             <div class="fact"><b>Use when</b> Extraction, classification, agent final answer, typed API output.</div>
             <div class="fact"><b>Import</b> <code>BaseModel</code>; LLM structured predict APIs.</div>
-            <div class="fact"><b>Methods</b> <code>structured_predict()</code>, agent structured output patterns.</div>
+            <div class="fact"><b>Methods</b> <code>astructured_predict()</code>, agent structured output patterns.</div>
           </div>
           <pre class="language-python"><code class="language-python">from pydantic import BaseModel, Field
 from llama_index.llms.openai import OpenAI
@@ -942,7 +931,8 @@ class ContactInfo(BaseModel):
 
 llm = OpenAI(model="gpt-4o-mini")
 
-info = llm.structured_predict(
+# Async structured prediction
+info = await llm.astructured_predict(
     ContactInfo,
     "Extract contact info: Lan, lan@example.com",
 )
@@ -984,18 +974,20 @@ class Retrieved(Event):
 class RAGWorkflow(Workflow):
     @step
     async def retrieve(self, ev: StartEvent) -> Retrieved:
-        nodes = retriever.retrieve(ev.question)
+        nodes = await retriever.aretrieve(ev.question)
         context = "\n\n".join(n.node.get_content() for n in nodes)
         return Retrieved(context=context)
 
     @step
     async def answer(self, ev: Retrieved) -> StopEvent:
-        response = llm.complete(f"Answer from context:\n{ev.context}")
+        response = await llm.acomplete(f"Answer from context:\n{ev.context}")
         return StopEvent(result=str(response))
 
-result = await RAGWorkflow(timeout=60).run(question="What changed?")</code></pre>
+# Execute workflow async
+workflow = RAGWorkflow(timeout=60)
+result = await workflow.run(question="What changed?")</code></pre>
           <div class="note">
-            <p><b>Best:</b> type events clear; use plain Python for branches/loops; validate workflow in tests.</p>
+            <p><b>Best:</b> Define clear Event schemas; use plain Python for execution control.</p>
             <p class="bad"><b>Mistake:</b> Hide complex workflow logic inside query-engine callbacks that are hard to debug.</p>
           </div>
         </div>
@@ -1063,6 +1055,7 @@ policy_tool = QueryEngineTool(
     ),
 )
 
+# Định tuyến engine thông minh bằng LLM selector
 router = RouterQueryEngine(
     selector=LLMSingleSelector.from_defaults(),
     query_engine_tools=[policy_tool, api_tool],
@@ -1091,6 +1084,7 @@ router = RouterQueryEngine(
           </div>
           <pre class="language-python"><code class="language-python">from llama_index.core import PropertyGraphIndex
 
+# Xây dựng Graph Index async
 graph_index = PropertyGraphIndex.from_documents(
     documents,
     show_progress=True,
@@ -1100,7 +1094,7 @@ query_engine = graph_index.as_query_engine(
     include_text=True,
 )
 
-response = query_engine.query(
+response = await query_engine.aquery(
     "Which companies are related to product X?"
 )</code></pre>
           <div class="note">
@@ -1133,12 +1127,13 @@ response = query_engine.query(
 faithfulness = FaithfulnessEvaluator(llm=llm)
 relevancy = RelevancyEvaluator(llm=llm)
 
-response = query_engine.query("What is the SLA?")
+response = await query_engine.aquery("What is the SLA?")
 
-faith_result = faithfulness.evaluate_response(
+# Đánh giá độ trung thực và tính liên quan async
+faith_result = await faithfulness.aevaluate_response(
     response=response,
 )
-rel_result = relevancy.evaluate_response(
+rel_result = await relevancy.aevaluate_response(
     query="What is the SLA?",
     response=response,
 )</code></pre>
@@ -1173,13 +1168,134 @@ from llama_index.core.callbacks import (
 debug = LlamaDebugHandler(print_trace_on_end=True)
 Settings.callback_manager = CallbackManager([debug])
 
-response = query_engine.query("Why did retrieval fail?")
+response = await query_engine.aquery("Why did retrieval fail?")
 
 events = debug.get_event_pairs()</code></pre>
           <div class="note">
-            <p><b>Best:</b> log retrieved nodes, prompts, latency, token usage, model/index versions.</p>
+            <p><b>Best:</b> Log retrieved nodes, prompts, latency, token usage, model/index versions.</p>
             <p class="bad"><b>Mistake:</b> Only log the final answer; without traces it is hard to know whether retrieval or synthesis failed.</p>
           </div>
+        </div>
+      </article>
+
+      <article id="fastapi" class="card span-2">
+        <div class="card-head">
+          <div class="icon blue">API</div>
+          <div>
+            <h2>Async FastAPI Integration (Streaming SSE)</h2>
+            <div class="caption">FastAPI endpoint với async chat engine streaming</div>
+          </div>
+        </div>
+        <div class="body">
+          <pre class="language-python"><code class="language-python">from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+
+app = FastAPI()
+chat_engine = index.as_chat_engine(chat_mode="context")
+
+class QueryPayload(BaseModel):
+    prompt: str
+
+@app.post("/api/chat/stream")
+async def sse_chat_endpoint(payload: QueryPayload):
+    # Streaming chat async
+    response_stream = await chat_engine.astream_chat(payload.prompt)
+    
+    async def sse_generator():
+        # Lặp không chặn qua generator tokens
+        for token in response_stream.async_response_gen():
+            yield f"data: {token}\n\n"
+            
+    return StreamingResponse(sse_generator(), media_type="text/event-stream")</code></pre>
+        </div>
+      </article>
+
+      <article id="hybrid" class="card">
+        <div class="card-head">
+          <div class="icon gold">HYB</div>
+          <div>
+            <h2>Hybrid Search &amp; Reranking</h2>
+            <div class="caption">Blend vector + keyword và sắp xếp lại kết quả bằng Reranker</div>
+          </div>
+        </div>
+        <div class="body">
+          <pre class="language-python"><code class="language-python">from llama_index.core.retrievers import QueryFusionRetriever
+from llama_index.core.postprocessor import LLMRerank
+
+# Kết hợp vector search + keyword search (BM25)
+fusion_retriever = QueryFusionRetriever(
+    [vector_retriever, bm25_retriever],
+    num_queries=1,
+    use_async=True,
+    similarity_top_k=10
+)
+
+# Thêm LLM reranker để chọn top 3 nodes liên quan nhất
+reranker = LLMRerank(top_n=3)
+
+query_engine = index.as_query_engine(
+    retriever=fusion_retriever,
+    node_postprocessors=[reranker]
+)</code></pre>
+        </div>
+      </article>
+
+      <article id="errors" class="card span-2">
+        <div class="card-head">
+          <div class="icon red">ERR</div>
+          <div>
+            <h2>Error Handling &amp; Connection Management</h2>
+            <div class="caption">Try-catch, timeout budget và database retry policies</div>
+          </div>
+        </div>
+        <div class="body">
+          <pre class="language-python"><code class="language-python">import asyncio
+import logging
+
+logger = logging.getLogger("llama_index_app")
+
+async def safe_query_engine(query_engine, prompt: str) -> str:
+    try:
+        # Giới hạn timeout 10s cho các API calls hoặc VectorDB queries
+        response = await asyncio.wait_for(
+            query_engine.aquery(prompt),
+            timeout=10.0
+        )
+        return str(response)
+    except asyncio.TimeoutError:
+        logger.error("RAG Query timed out. Activating fallback path.")
+        return "Hệ thống đang quá tải. Vui lòng thử lại sau."
+    except Exception as e:
+        logger.exception("Unexpected error in RAG pipeline")
+        return "Đã xảy ra lỗi hệ thống."</code></pre>
+        </div>
+      </article>
+
+      <article id="cache" class="card">
+        <div class="card-head">
+          <div class="icon green">CAC</div>
+          <div>
+            <h2>Caching &amp; Ingestion Cache</h2>
+            <div class="caption">Optimizing document processing pipeline và query caching</div>
+          </div>
+        </div>
+        <div class="body">
+          <pre class="language-python"><code class="language-python">from llama_index.core.ingestion import IngestionCache
+from llama_index.core.ingestion.cache import RedisCache
+
+# Khởi tạo Redis cache cho pipeline
+redis_cache = RedisCache(
+    redis_uri="redis://localhost:6379", 
+    collection="docs_cache"
+)
+pipeline_cache = IngestionCache(cache=redis_cache)
+
+# Pipeline chỉ embed/parse các file thay đổi nội dung
+pipeline = IngestionPipeline(
+    transformations=[splitter, embed_model],
+    cache=pipeline_cache
+)</code></pre>
         </div>
       </article>
 
@@ -1207,8 +1323,8 @@ events = debug.get_event_pairs()</code></pre>
 6. Evaluate retrieval and answer quality.
 7. Trace every run and monitor cost/latency.</code></pre>
           <div class="note">
-            <p><b>Best:</b> separate ingestion service from query API; version everything.</p>
-            <p class="bad"><b>Mistake:</b> doing data ingestion, index build, and user query in one request path.</p>
+            <p><b>Best:</b> Separate ingestion service from query API; version everything.</p>
+            <p class="bad"><b>Mistake:</b> Doing data ingestion, index build, and user query in one request path.</p>
           </div>
         </div>
       </article>
@@ -1303,7 +1419,7 @@ agent = FunctionAgent(
     ),
 )
 
-response = await agent.run(
+response = await agent.arun(
     user_msg="What does error E_AUTH_42 mean and who owns the fix?"
 )</code></pre>
           <div class="note">
@@ -1339,7 +1455,7 @@ query_engine = index.as_query_engine(
     response_mode="compact",
 )
 
-response = query_engine.query("What changed in the refund policy?")
+response = await query_engine.aquery("What changed in the refund policy?")
 
 for source in response.source_nodes:
     print(
@@ -1468,12 +1584,12 @@ eval_cases = [
 ]
 
 for case in eval_cases:
-    response = query_engine.query(case["query"])
+    response = await query_engine.aquery(case["query"])
     source_ids = [n.node.metadata.get("source") for n in response.source_nodes]
 
     results = {
-        "faithfulness": faithfulness.evaluate_response(response=response),
-        "relevancy": relevancy.evaluate_response(
+        "faithfulness": await faithfulness.aevaluate_response(response=response),
+        "relevancy": await relevancy.aevaluate_response(
             query=case["query"],
             response=response,
         ),
